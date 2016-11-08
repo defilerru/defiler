@@ -1,0 +1,23 @@
+html, body, div, span { margin: 0; padding; 0; }
+html, body { height: 100%; }
+
+a { text-decoration: underline; }
+a:hover { cursor: pointer; }
+
+div.chat { width: 23em; height: 90%; border: 1px solid; }
+div.chat input { width: 90% }
+div.chatMessages { overflow-y: scroll; width: 100%; height: 95%; }
+div.elStreamChatTitle { background-color: #eee; }
+
+div#mainChat { float: left; }
+div#elStreamChat { float: right; display: none; }
+
+div#header { width: 100%; background-color: #eee; }
+div#header form { display: inline; }
+
+div#elMainDiv { height: 90%; margin: 0 24em;  }
+div#elMainDiv iframe { width: 100%; height: 100%; }
+
+div#footer { clear: both; }
+
+div.activeStreams > div { background-color: #eee; float: left; margin: 6pt; padding: 2pt; text-align: center; }
