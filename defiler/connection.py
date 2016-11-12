@@ -3,7 +3,7 @@ import json
 PUBLIC_METHODS = {"login", "logout", "chat", "join", "leave"}
 
 
-class Session:
+class Connection:
 
     def __init__(self, ws, manager):
         self.ws = ws
