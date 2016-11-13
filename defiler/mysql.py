@@ -13,7 +13,7 @@ GET_STREAMS_QUERY = "SELECT slug, name FROM streams WHERE provider=%s"
 class DB:
 
     async def connect(self, **kwargs):
-        self.pool = await create_pool(**kwargs)
+        self.pool = await create_pool(autocommit=True, **kwargs)
 
     async def check_auth(self, username, password):
         async with self.pool.get() as conn:

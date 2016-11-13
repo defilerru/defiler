@@ -1,8 +1,6 @@
 import asyncio
 import json
 
-from defiler import stream
-
 import aiohttp
 
 ADD_STREAM_QUERY = "INSERT INTO streams_twitch(slug, name) VALUES (%s, %s)"

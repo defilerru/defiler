@@ -81,6 +81,7 @@ class Manager:
 
     async def new_connection(self, ws, request):
         user = await self.get_session_user(request)
+        print("U", user)
         if user:
             uid, nickname, sid = user
         else:

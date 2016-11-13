@@ -42,9 +42,8 @@ async def oauth2_handle(request):
     token = await manager.oauth2.get_token(
         request.GET["state"].encode("ascii"), request.GET["code"])
     twitch_username = await request.app["defiler"].oauth2.get_username(token)
-    uid = await manager.get_session_user(request)
+    old_uid = await manager.get_session_user(request)
     response = aiohttp.web.HTTPFound("/")
-    if uid is None:
-        uid, nickname = await manager.db.get_or_create_user_by_twitch(twitch_username)
-        await manager.set_sesssion_user(response, uid, nickname)
+    uid, nickname = await manager.db.get_or_create_user_by_twitch(twitch_username)
+    await manager.set_sesssion_user(response, uid, nickname)
     return response
