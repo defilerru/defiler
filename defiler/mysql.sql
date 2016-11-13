@@ -3,11 +3,30 @@ GRANT ALL on defiler.* TO 'defiler'@'localhost';
 
 USE defiler;
 
+CREATE TABLE sessions (
+    id char(20) NOT NULL PRIMARY KEY,
+    created datetime,
+    user_id int unsigned NULL,
+    nickname char(64) NULL,
+    INDEX created_idx(created),
+    INDEX user_id_idx(user_id)
+);
+
 CREATE TABLE users (
     id serial,
     username char(32) unique,
     password char(128),
-    gas int unsigned not null default 0
+    nickname char(64) unique,
+    gas int unsigned not null default 0,
+    INDEX username_idx(username)
+);
+
+CREATE TABLE twitch (
+    username char(64) PRIMARY KEY,
+    token char(128),
+    user_id int unsigned NULL UNIQUE,
+    man_minutes_total int unsigned not null default 0,
+    INDEX user_id_idx(user_id)
 );
 
 CREATE TABLE streams (

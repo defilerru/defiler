@@ -22,6 +22,8 @@ def app(argv):
     app = web.Application()
     app.router.add_get('/', views.index)
     app.router.add_get('/wsapi', views.wsapi)
+    app.router.add_post('/login/twitch', views.oauth2_init)
+    app.router.add_get('/oauth2/twitch', views.oauth2_handle)
     app.router.add_static('/static', 'defiler/static')
     app.on_startup.append(startup)
     app.on_cleanup.append(cleanup)

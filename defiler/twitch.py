@@ -7,7 +7,8 @@ import aiohttp
 
 GET_STREAMS_QUERY = "SELECT slug, name FROM streams WHERE provider=%s"
 ADD_STREAM_QUERY = "INSERT INTO streams_twitch(slug, name) VALUES (%s, %s)"
-TWITCH_CHECK_URL = 'https://api.twitch.tv/kraken/streams?channel=%s&client_id=%s'
+API_URL = "https://api.twitch.tv/kraken"
+STREAMS_CHECK_URL = API_URL + "/streams?channel=%s&client_id=%s"
 MAX_URL_LEN = 1024
 
 
@@ -30,7 +31,6 @@ class Stream:
             "status": data["channel"]["status"],
             "language": data["channel"]["broadcaster_language"],
         }
-        print(data)
         self.event_str = json.dumps(["STREAM", self.info])
 
     def __str__(self):
@@ -83,7 +83,7 @@ class Checker:
     async def _check_streams(self, slices):
         online = set()
         for csv in slices:
-            url = TWITCH_CHECK_URL % (csv, self.manager.cfg["twitch"]["id"])
+            url = STREAMS_CHECK_URL % (csv, self.manager.cfg["twitch"]["id"])
             await asyncio.sleep(self.delay)
             while 1:
                 r = await aiohttp.get(url)

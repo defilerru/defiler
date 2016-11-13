@@ -14,7 +14,7 @@ METHODS
 EVENTS
 ######
 
-["LOGIN", {success: boolean}]
+["AUTH", {success: bool, nickname: string, uid: int}]
 ["LOGOUT", {}]
 ["CHAT", {channel: string, nickname: string, message: string}]
 ["STREAM", {provider: string, slug: string, viewers: int}]

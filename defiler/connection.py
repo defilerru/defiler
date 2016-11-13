@@ -5,10 +5,11 @@ PUBLIC_METHODS = {"login", "logout", "chat", "join", "leave"}
 
 class Connection:
 
-    def __init__(self, ws, manager):
+    def __init__(self, ws, manager, uid, nickname):
         self.ws = ws
         self.manager = manager
-        self.username = str(id(ws))
+        self.uid = uid
+        self.nickname = nickname
 
     def get_api_method(self, name):
         if name in PUBLIC_METHODS:
@@ -17,13 +18,13 @@ class Connection:
     async def login(self, username, password):
         gas = await self.manager.db.check_auth(username, password)
         if not gas:
-            return {"event": "LOGIN", "status": "UNAUTHORIZED"}
-        self.username = username
-        return {"event": "LOGIN", "status": "OK", "token": "123", "username": username}
+            return ["AUTH", {"success": False}]
+        self.nickname = username
+        return ["AUTH", {"success": True, "nickname": self.nickname, "uid": None}]
 
     def logout(self):
-        self.username = str(id(self.ws))
-        return {"event": "LOGOUT", "status": "OK"}
+        self.nickname = None
+        return ["LOGOUT", {}]
 
     def join(self, channel):
         self.manager.join(channel, self)
@@ -39,6 +40,6 @@ class Connection:
 
     def chat(self, channel, message):
         data = json.dumps(["CHAT", {"channel": channel,
-                                    "nickname": self.username,
+                                    "nickname": self.nickname,
                                     "message": message}])
         self.manager.multicast(channel, data)

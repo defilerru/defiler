@@ -1,12 +1,17 @@
 import asyncio
+import base64
 from concurrent.futures import CancelledError
 from collections import defaultdict, deque
 import json
+import os
 
 from defiler.connection import Connection
 from defiler import twitch
+from defiler import oauth2
 
 POOL_INTERVAL = 1
+GET_USER_QUERY = ("SELECT user_id, nickname FROM sessions WHERE id=%s "
+                  "AND created > (NOW() - INTERVAL 30 DAY)")
 
 
 class Manager:
@@ -22,8 +27,28 @@ class Manager:
         self.channel_connection_map = defaultdict(set)
         self.connection_channel_map = defaultdict(set)
         self.streams = {}
+        self.oauth2 = oauth2.Twitch(cfg["twitch"]["id"],
+                                    cfg["twitch"]["secret"],
+                                    cfg["defiler"]["base_url"] + "/oauth2/twitch")
+        self.cookie_name = self.cfg["defiler"]["cookie_name"]
         self.chat_data = defaultdict(
             lambda: deque([], int(cfg["chat"]["remember_lines"])))
+
+    async def get_session_user(self, request):
+        """
+        :returns tuple: (uid, nickname, gas)
+        """
+        sid = request.cookies.get(self.cookie_name)
+        if sid is None:
+            return
+        user = await self.db.execute(GET_USER_QUERY, (sid, ))
+        if user:
+            return user[0]
+
+    async def set_sesssion_user(self, response, uid, nickname):
+        sid = base64.b64encode(os.urandom(15)).decode("ascii")
+        await self.db.create_session(sid, uid, nickname)
+        response.set_cookie(self.cookie_name, sid)
 
     def stream_online_cb(self, stream):
         self.streams[stream.slug] = stream
@@ -51,12 +76,17 @@ class Manager:
         except CancelledError:
             pass
 
-    def new_connection(self, ws):
-        connection = Connection(ws, self)
+    async def new_connection(self, ws, request):
+        user = await self.get_session_user(request)
+        if user:
+            uid, nickname = user
+        else:
+            uid = nickname = None
+        connection = Connection(ws, self, uid, nickname)
         self.connections[ws] = connection
         for stream in self.streams.values():
             connection.ws.send_str(stream.event_str)
-        user_event = json.dumps(["USER_ONLINE", {"nickname": connection.username}])
+        user_event = json.dumps(["USER_ONLINE", {"nickname": connection.nickname}])
         for s in self.connections.values():
             s.ws.send_str(user_event)
 
