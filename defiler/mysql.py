@@ -8,7 +8,7 @@ CREATE_TWITCH_USER = ("INSERT INTO twitch(username) VALUES(%s)")
 CREATE_SESSION_QUERY = ("INSERT INTO sessions(id, user_id, nickname, created) "
                         "VALUES(%s, %s, %s, NOW())")
 DELETE_SESSION_QUERY = ("DELETE FROM sessions WHERE id=%s")
-
+GET_STREAMS_QUERY = "SELECT slug, name FROM streams WHERE provider=%s"
 
 class DB:
 
@@ -61,9 +61,5 @@ class DB:
             data = await cur.fetchall()
             return data
 
-    async def get_streams(self, provider=None):
-        async with self.pool.get() as conn:
-            cur = await conn.cursor()
-            await cur.execute("SELECT provider, slug, name FROM streams")
-            streams = await cur.fetchall()
-            return streams
+    async def get_streams(self, provider):
+        return await self.execute(GET_STREAMS_QUERY, (provider, ))

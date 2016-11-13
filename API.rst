@@ -17,7 +17,7 @@ EVENTS
 ["AUTH", {success: bool, nickname: string, uid: int}]
 ["LOGOUT", {}]
 ["CHAT", {channel: string, nickname: string, message: string}]
-["STREAM", {provider: string, slug: string, viewers: int}]
+["STREAM", {provider: string, slug: string, data: {}}]
 ["STREAM_OFFLINE", {provider: string, slug: string}]
 ["USER_ONLINE", {nickname: string}]
 ["USER_OFFLINE", {nickname: string}]

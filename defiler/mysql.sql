@@ -43,6 +43,7 @@ CREATE TABLE streams (
 INSERT INTO users SET username='yoda', password=PASSWORD('123');
 
 INSERT INTO streams SET slug='byflash', name='Flash', provider='afreeca', race='terran';
+INSERT INTO streams SET slug='ioioiobb', name='By.Sun', provider='afreeca', race='protoss';
 INSERT INTO streams SET slug='wodnrdldia', name='Best', provider='afreeca', race='protoss';
 
 INSERT INTO `streams` VALUES ('byflash',NULL,'Flash','afreeca','terran',0);

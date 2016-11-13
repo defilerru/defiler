@@ -24,6 +24,8 @@ function getStreamDiv(stream) {
   innerDiv.appendChild(document.createTextNode(stream.slug));
   div.appendChild(innerDiv);
   var img = document.createElement("img");
+  img.width = 240;
+  img.height = 180;
   img.src = stream.preview;
   div.appendChild(img);
   div.id = "stream_" + stream.provider + stream.slug;

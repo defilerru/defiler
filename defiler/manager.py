@@ -6,6 +6,7 @@ import json
 import os
 
 from defiler.connection import Connection
+from defiler import afreeca
 from defiler import twitch
 from defiler import oauth2
 
@@ -64,6 +65,8 @@ class Manager:
         self.db = mysql.DB()
         await self.db.connect(**dict(self.cfg["mysql"]))
 
+        self.afreeca = afreeca.Checker(self)
+        self.afreeca_checker = self.app.loop.create_task(self.afreeca.run())
         self.twitch = twitch.Checker(self)
         self.twitch_checker = self.app.loop.create_task(self.twitch.run())
 

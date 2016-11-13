@@ -5,7 +5,6 @@ from defiler import stream
 
 import aiohttp
 
-GET_STREAMS_QUERY = "SELECT slug, name FROM streams WHERE provider=%s"
 ADD_STREAM_QUERY = "INSERT INTO streams_twitch(slug, name) VALUES (%s, %s)"
 API_URL = "https://api.twitch.tv/kraken"
 STREAMS_CHECK_URL = API_URL + "/streams?channel=%s&client_id=%s"
@@ -25,6 +24,7 @@ class Stream:
             "provider": "twitch",
             "slug": self.slug,
             "name": name,
+            "preview": data["preview"]["medium"],
             "game": data["channel"]["game"],
             "viewers": data["viewers"],
             "display_name": data["channel"]["display_name"],
@@ -59,7 +59,7 @@ class Checker:
             raise
 
     async def run(self):
-        rows = await self.manager.db.execute(GET_STREAMS_QUERY, self.provider)
+        rows = await self.manager.db.get_streams(self.provider)
         slices = []
         csv = ""
         for row in rows:
@@ -101,5 +101,5 @@ class Checker:
                     self._online[slug] = stream
                     self.manager.stream_online_cb(stream)
         for slug in set(self._online.keys()) - online:
-            stream = self._online.pop(slug)
+            self._online.pop(slug)
             self.manager.stream_offline_cb(slug)

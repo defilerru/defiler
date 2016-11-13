@@ -16,14 +16,12 @@ var Defiler = function() {
   for(var i=0; i<elements.length; i++) {
     self[elements[i]] = document.getElementById(elements[i]);
   }
+  self.elAuthForm = document.forms["auth"];
   self.elStreams = document.createElement("div");
+  self.elStreams.setAttribute("class", "activeStreams");
 
   self.currentStream = null;
   self.online = false;
-
-  self.elAuthForm = document.forms["auth"];
-
-  self.elStreams.setAttribute("class", "activeStreams");
 
   var eventHandler = {
     AUTH: function(e) {
