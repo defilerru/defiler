@@ -7,6 +7,7 @@ GET_USER_BY_TWITCH = ("SELECT u.id, u.nickname "
 CREATE_TWITCH_USER = ("INSERT INTO twitch(username) VALUES(%s)")
 CREATE_SESSION_QUERY = ("INSERT INTO sessions(id, user_id, nickname, created) "
                         "VALUES(%s, %s, %s, NOW())")
+DELETE_SESSION_QUERY = ("DELETE FROM sessions WHERE id=%s")
 
 
 class DB:
@@ -22,6 +23,12 @@ class DB:
                               (username, password))
             value = await cur.fetchone()
             return value
+
+    async def delete_session(self, sid):
+        async with self.pool.get() as conn:
+            cur = await conn.cursor()
+            await cur.execute(DELETE_SESSION_QUERY, (sid))
+            await conn.commit()
 
     async def create_session(self, sid, uid, nickname):
         async with self.pool.get() as conn:

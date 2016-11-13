@@ -3,7 +3,7 @@
 var Defiler = function() {
   var self = this;
   var schema = location.protocol == 'https:' ? 'wss://' : 'ws://';
-  var elements = ["elOnline", "elAuthInfo", "elMainDiv",
+  var elements = ["elOnline", "elAuthInfo", "elMainDiv", "elAuth",
                   "elMainChatInput",
                   "elMainChatMessages",
                   "elStreamChatInput",
@@ -26,16 +26,18 @@ var Defiler = function() {
   self.elStreams.setAttribute("class", "activeStreams");
 
   var eventHandler = {
-    LOGIN: function(e) {
-      if(e.status === "OK") {
-        self.elAuthInfo.innerHTML = "logout " + e.username;
-        self.hide(self.elAuthForm);
+    AUTH: function(e) {
+      if(e.success) {
+        self.elAuthInfo.innerHTML = "logout " + e.nickname;
+        self.hide(self.elAuth);
         self.unhide(self.elAuthInfo, "inline");
+        self.setChatReadOnly(false);
       }
     },
     LOGOUT: function(e) {
-      self.unhide(self.elAuthForm, "inline");
+      self.unhide(self.elAuth, "inline");
       self.hide(self.elAuthInfo);
+      self.setChatReadOnly(true);
     },
     CHAT: function(e) {
       var element = e.channel.length === 0 ? self.elChatMessages : self.elStreamChatMessages;
@@ -96,13 +98,19 @@ var Defiler = function() {
   connectWS();
 };
 
+Defiler.prototype.setChatReadOnly = function (readOnly) {
+  this.elStreamChatInput.readOnly = readOnly;
+  this.elMainChatInput.readOnly = readOnly;
+};
+
 Defiler.prototype.setOffline = function () {
   this.elOnline.style.color = "red";
-}
+  this.setChatReadOnly(true);
+};
 
 Defiler.prototype.setOnline = function () {
   this.elOnline.style.color = "green";
-}
+};
 
 Defiler.prototype.hide = function (element) {
   element.style.visibility = "hidden";

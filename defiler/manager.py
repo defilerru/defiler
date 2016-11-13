@@ -10,7 +10,7 @@ from defiler import twitch
 from defiler import oauth2
 
 POOL_INTERVAL = 1
-GET_USER_QUERY = ("SELECT user_id, nickname FROM sessions WHERE id=%s "
+GET_USER_QUERY = ("SELECT user_id, nickname, id FROM sessions WHERE id=%s "
                   "AND created > (NOW() - INTERVAL 30 DAY)")
 
 
@@ -36,7 +36,7 @@ class Manager:
 
     async def get_session_user(self, request):
         """
-        :returns tuple: (uid, nickname, gas)
+        :returns tuple: (uid, nickname, sid)
         """
         sid = request.cookies.get(self.cookie_name)
         if sid is None:
@@ -55,8 +55,8 @@ class Manager:
         self.broadcast(stream.event_str)
         print("ONLINE", stream)
 
-    def stream_offline_cb(self, stream):
-        stream = self.streams.pop(stream.slug)
+    def stream_offline_cb(self, slug):
+        stream = self.streams.pop(slug)
         print("OFFLINE", stream)
 
     async def start(self):
@@ -79,10 +79,14 @@ class Manager:
     async def new_connection(self, ws, request):
         user = await self.get_session_user(request)
         if user:
-            uid, nickname = user
+            uid, nickname, sid = user
         else:
-            uid = nickname = None
-        connection = Connection(ws, self, uid, nickname)
+            uid = nickname = sid = None
+        connection = Connection(ws, self, uid, nickname, sid)
+        if nickname is None:
+            connection.send_json(["LOGOUT", {}])
+        else:
+            connection.send_json(["AUTH", {"success": True, "uid": uid, "nickname": nickname}])
         self.connections[ws] = connection
         for stream in self.streams.values():
             connection.ws.send_str(stream.event_str)
