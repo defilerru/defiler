@@ -17,6 +17,7 @@ CREATE TABLE users (
     username char(32) unique,
     password char(128),
     nickname char(64) unique,
+    pic char(256),
     gas int unsigned not null default 0,
     INDEX username_idx(username)
 );
@@ -35,7 +36,6 @@ CREATE TABLE streams (
     name char(128),
     provider char(16),
     race ENUM("terran", "protoss", "zerg"),
-    not_bw boolean not null default false,
     CONSTRAINT slug_provider UNIQUE (slug, provider),
     INDEX provider_idx (provider)
 );

@@ -1,18 +1,23 @@
 import asyncio
 import json
-
+import urllib.parse
+import logging
+from concurrent.futures import CancelledError
 import aiohttp
 
+LOG = logging.getLogger(__name__)
 ADD_STREAM_QUERY = "INSERT INTO streams_twitch(slug, name) VALUES (%s, %s)"
 API_URL = "https://api.twitch.tv/kraken"
 STREAMS_CHECK_URL = API_URL + "/streams?channel=%s&client_id=%s"
+
+
 MAX_URL_LEN = 1024
 
 
 class Stream:
     viewers = 0
 
-    def __init__(self, name, data):
+    def __init__(self, data):
         """
         :param dict data: stream data returned from twitch API
         """
@@ -21,7 +26,7 @@ class Stream:
         self.info = {
             "provider": "twitch",
             "slug": self.slug,
-            "name": name,
+            "name": data["channel"]["display_name"],
             "preview": data["preview"]["medium"],
             "game": data["channel"]["game"],
             "viewers": data["viewers"],
@@ -45,42 +50,62 @@ class Checker:
 
     def __init__(self, manager):
         self.manager = manager
-        self._new_streams = asyncio.Queue()
         self._online = {}
-        self._names = {}
         self.delay = int(self.manager.cfg["twitch"]["delay"])
+        self._all_streams = []
+        self._slices = []
+        self._find_streams_url = API_URL + "/streams?" + urllib.parse.urlencode({
+            "game": "StarCraft: Brood War",
+            "client_id": self.manager.cfg["twitch"]["id"],
+            "stream_type": "live",
+        })
 
-    def add_stream(self, data):
-        try:
-            self.manager.db.execute(ADD_STREAM_QUERY, data["slug"], data["name"])
-        except Exception as ex:
-            raise
+    def _add_stream(self, name):
+        self._all_streams.append(name)
+        if self._slices:
+            self._slices = []
 
-    async def run(self):
-        rows = await self.manager.db.get_streams(self.provider)
-        slices = []
+    def _get_slices(self):
+        if self._slices:
+            return self._slices
         csv = ""
-        for row in rows:
-            self._names[row[0]] = row[1]
-            csv += row[0]
+        for slug in self._all_streams:
+            csv += slug
             if len(csv) > MAX_URL_LEN:
-                slices.append(csv)
+                self._slices.append(csv)
                 csv = ""
             else:
                 csv += ","
         if csv:
-            slices.append(csv[:-1])
+            self._slices.append(csv[:-1])
+        return self._slices
 
+    async def _find_streams(self):
+        while 1:
+            async with aiohttp.get(self._find_streams_url) as r:
+                streams = await r.json()
+                for s in streams["streams"]:
+                    slug = s["channel"]["name"]
+                    if slug not in self._all_streams:
+                        self._add_stream(slug)
+                break
+                # TODO: see next page
+
+    async def run(self):
         while 1:
             try:
-                await self._check_streams(slices)
+                await asyncio.sleep(self.delay)
+                await self._find_streams()
+                await self._check_streams()
+            except CancelledError:
+                LOG.info("Checker cancelled")
+                return
             except Exception as ex:
-                print(ex)
-                raise
+                LOG.exception("Error in check loop")
 
-    async def _check_streams(self, slices):
+    async def _check_streams(self):
         online = set()
-        for csv in slices:
+        for csv in self._get_slices():
             url = STREAMS_CHECK_URL % (csv, self.manager.cfg["twitch"]["id"])
             await asyncio.sleep(self.delay)
             while 1:
@@ -88,14 +113,14 @@ class Checker:
                 if r.status == 200 and r.headers["content-type"] == "application/json":
                     break
                 else:
-                    print(r.status)
+                    LOG.info("Error checking stream status %s" % r)
                 await asyncio.sleep(2)
             data = await r.json()
             for stream in data["streams"]:
                 slug = stream["channel"]["name"]
                 online.add(slug)
                 if slug not in self._online:
-                    stream = Stream(self._names[slug], stream)
+                    stream = Stream(stream)
                     self._online[slug] = stream
                     self.manager.stream_online_cb(stream)
         for slug in set(self._online.keys()) - online:

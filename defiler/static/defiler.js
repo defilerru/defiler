@@ -10,7 +10,7 @@ var Defiler = function() {
                   "elStreamChatMessages",
                   "elStreamChat",
                   "elStreamChatTitle",
-                  "elDisplayStreams"
+                  "elBWStreams"
   ];
 
   for(var i=0; i<elements.length; i++) {
@@ -90,7 +90,7 @@ var Defiler = function() {
   self.elAuthInfo.addEventListener("click", function(e) {
     self.logout();
   });
-  self.elDisplayStreams.addEventListener("click", function (e) {
+  self.elBWStreams.addEventListener("click", function (e) {
     self.displayStreams();
   });
   connectWS();

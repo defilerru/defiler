@@ -3,6 +3,7 @@ import base64
 from concurrent.futures import CancelledError
 from collections import defaultdict, deque
 import json
+import logging
 import os
 
 from defiler.connection import Connection
@@ -13,6 +14,7 @@ from defiler import oauth2
 POOL_INTERVAL = 1
 GET_USER_QUERY = ("SELECT user_id, nickname, id FROM sessions WHERE id=%s "
                   "AND created > (NOW() - INTERVAL 30 DAY)")
+LOG = logging.getLogger(__name__)
 
 
 class Manager:
@@ -54,11 +56,11 @@ class Manager:
     def stream_online_cb(self, stream):
         self.streams[stream.slug] = stream
         self.broadcast(stream.event_str)
-        print("ONLINE", stream)
+        LOG.info("Online %s", stream)
 
     def stream_offline_cb(self, slug):
         stream = self.streams.pop(slug)
-        print("OFFLINE", stream)
+        LOG.info("Offline %s", stream)
 
     async def start(self):
         from defiler import mysql

@@ -1,3 +1,6 @@
+from defiler import log
+log.configure_logging(True)
+
 from defiler import manager
 from defiler import views
 

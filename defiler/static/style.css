@@ -1,6 +1,8 @@
 html, body, div, span { margin: 0; padding; 0; }
 html, body { height: 100%; }
 
+div.streamTitle { height: 2em; }
+
 a { text-decoration: underline; }
 a:hover { cursor: pointer; }
 
